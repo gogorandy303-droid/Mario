@@ -1,0 +1,1127 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Form 3 Grammar Adventure - Present Simple</title>
+    <!-- Tailwind CSS for rich modern UI overlays -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Grandstander:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1b4b;
+            font-family: 'Fredoka', cursive, sans-serif;
+            overflow: hidden;
+            color: #1e293b;
+        }
+        .heading-font {
+            font-family: 'Grandstander', cursive, sans-serif;
+        }
+        /* Custom chalkboard styling */
+        .chalkboard {
+            background: radial-gradient(circle, #1a4731 0%, #0d281a 100%);
+            border: 12px solid #854d0e;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.7), 0 10px 25px rgba(0,0,0,0.5);
+        }
+        /* Screen shaking animation */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 3px); }
+            40% { transform: translate(6px, -3px); }
+            60% { transform: translate(-4px, 2px); }
+            80% { transform: translate(4px, -2px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        /* Bounce animation */
+        @keyframes pulse-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        .pulse-hover:hover {
+            animation: pulse-bounce 0.8s infinite;
+        }
+        /* Custom scrollbar for popups if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center relative">
+
+    <!-- Game Viewport Container -->
+    <div id="game-container" class="relative w-full h-full max-w-[1280px] max-h-[720px] aspect-video bg-sky-200 overflow-hidden shadow-2xl rounded-none md:rounded-3xl border-0 md:border-4 border-indigo-900 flex flex-col">
+        
+        <!-- Canvas for 2D Platformer -->
+        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+        <!-- TOP HUD -->
+        <div id="hud" class="absolute top-0 left-0 right-0 p-3 md:p-4 flex items-center justify-between pointer-events-none z-10">
+            <!-- Left Info: Lives & School Badge -->
+            <div class="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-md border-2 border-indigo-200 pointer-events-auto">
+                <div class="flex items-center gap-1.5" id="lives-container">
+                    <span class="text-xl md:text-2xl" id="heart-1">❤️</span>
+                    <span class="text-xl md:text-2xl" id="heart-2">❤️</span>
+                    <span class="text-xl md:text-2xl" id="heart-3">❤️</span>
+                </div>
+                <div class="h-6 w-0.5 bg-slate-300"></div>
+                <div class="flex items-center gap-1 text-amber-600 font-bold text-base md:text-lg">
+                    <span>🪙</span>
+                    <span id="coin-count">0</span>
+                </div>
+            </div>
+
+            <!-- Stage & Progress Title -->
+            <div class="flex flex-col items-center bg-white/95 backdrop-blur-md px-5 py-2 rounded-2xl shadow-md border-2 border-indigo-200 pointer-events-auto">
+                <div class="text-xs md:text-sm font-extrabold uppercase tracking-wider text-indigo-700 heading-font" id="stage-badge">
+                    STAGE 1: SHORT ANSWERS
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-32 md:w-52 h-3.5 bg-slate-200 rounded-full mt-1 overflow-hidden p-0.5 border border-slate-300">
+                    <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <span class="text-[10px] md:text-xs font-bold text-slate-500 mt-0.5" id="progress-text">Checkpoints: 0 / 8</span>
+            </div>
+
+            <!-- Controls Info & Audio Toggle -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <button id="btn-sound" class="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-white/90 hover:bg-white text-indigo-700 shadow-md border-2 border-indigo-200 flex items-center justify-center text-lg transition active:scale-95">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- ON-SCREEN MOBILE CONTROLS -->
+        <div id="touch-controls" class="absolute bottom-4 left-0 right-0 px-6 flex justify-between items-center pointer-events-none z-10 md:hidden">
+            <div class="flex gap-3 pointer-events-auto">
+                <button id="btn-left" class="w-14 h-14 bg-white/80 active:bg-indigo-600 active:text-white rounded-2xl shadow-lg border-2 border-indigo-300 text-2xl flex items-center justify-center font-bold text-indigo-900 transition active:scale-90">
+                    ◀
+                </button>
+                <button id="btn-right" class="w-14 h-14 bg-white/80 active:bg-indigo-600 active:text-white rounded-2xl shadow-lg border-2 border-indigo-300 text-2xl flex items-center justify-center font-bold text-indigo-900 transition active:scale-90">
+                    ▶
+                </button>
+            </div>
+            <div class="pointer-events-auto">
+                <button id="btn-jump" class="w-16 h-16 bg-amber-400 active:bg-amber-500 rounded-2xl shadow-lg border-2 border-amber-600 text-2xl flex items-center justify-center font-extrabold text-amber-950 transition active:scale-90">
+                    ⬆️
+                </button>
+            </div>
+        </div>
+
+        <!-- OVERLAY: START SCREEN -->
+        <div id="start-modal" class="absolute inset-0 z-30 bg-indigo-950/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-2xl border-4 border-indigo-600 relative overflow-hidden">
+                <!-- Smart City Crest Vibe Header -->
+                <div class="w-16 h-16 mx-auto mb-2 bg-gradient-to-tr from-purple-700 to-indigo-600 rounded-2xl flex items-center justify-center text-3xl shadow-md border-2 border-amber-300">
+                    🎓
+                </div>
+                <div class="text-xs uppercase tracking-widest font-black text-indigo-500">Smart City Language School</div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-900 heading-font mt-1">FORM 3 ENGLISH QUEST</h1>
+                <div class="inline-block bg-amber-100 text-amber-900 text-xs md:text-sm font-bold px-3 py-1 rounded-full border border-amber-300 my-2">
+                    Topic: Present Simple – Do / Does Questions
+                </div>
+                <p class="text-slate-600 text-sm md:text-base mb-6 leading-relaxed">
+                    Run, jump, and collect golden books! Pass grammar checkpoints by choosing correct short answers and forming questions.
+                </p>
+
+                <!-- Keyboard Instructions -->
+                <div class="grid grid-cols-2 gap-3 mb-6 text-xs text-slate-600 bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+                    <div class="flex items-center gap-2 justify-center font-semibold">
+                        <span class="px-2 py-1 bg-white border border-slate-300 rounded shadow-sm">A / D</span> or <span class="px-2 py-1 bg-white border border-slate-300 rounded shadow-sm">◀ ▶</span> Move
+                    </div>
+                    <div class="flex items-center gap-2 justify-center font-semibold">
+                        <span class="px-2 py-1 bg-white border border-slate-300 rounded shadow-sm">W</span> or <span class="px-2 py-1 bg-white border border-slate-300 rounded shadow-sm">Space</span> Jump
+                    </div>
+                </div>
+
+                <button id="btn-start-game" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-extrabold text-lg md:text-xl rounded-2xl shadow-lg shadow-emerald-600/30 transform hover:-translate-y-0.5 active:translate-y-0 transition">
+                    START ADVENTURE 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- OVERLAY: GRAMMAR QUESTION CHECKPOINT -->
+        <div id="quiz-modal" class="hidden absolute inset-0 z-40 bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div id="quiz-box" class="chalkboard rounded-3xl p-6 md:p-8 max-w-xl w-full text-white shadow-2xl relative border-8 border-amber-800">
+                <!-- Checkpoint Badge -->
+                <div class="flex items-center justify-between pb-3 border-b border-emerald-700/60 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl" id="quiz-icon">📝</span>
+                        <span class="text-xs md:text-sm uppercase tracking-wider text-emerald-300 font-bold" id="quiz-category">Check Point Grammar</span>
+                    </div>
+                    <div class="text-xs bg-amber-400 text-amber-950 font-black px-2.5 py-1 rounded-full uppercase" id="quiz-num">Q1 / 8</div>
+                </div>
+
+                <!-- Prompt / Target Statement -->
+                <div class="text-emerald-200 text-xs md:text-sm font-semibold mb-1" id="quiz-instruction">Answer with a short answer:</div>
+                <h2 id="quiz-question" class="text-xl md:text-2xl font-bold mb-6 text-yellow-300 tracking-wide leading-snug">
+                    Do you like chocolate?
+                </h2>
+
+                <!-- Options Grid -->
+                <div id="quiz-options" class="flex flex-col gap-3 mb-4">
+                    <!-- Option buttons dynamically generated -->
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="quiz-feedback" class="min-h-[32px] text-center font-bold text-sm md:text-base flex items-center justify-center"></div>
+            </div>
+        </div>
+
+        <!-- OVERLAY: STAGE CLEAR / VICTORY MODAL -->
+        <div id="gameover-modal" class="hidden absolute inset-0 z-50 bg-indigo-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl border-4 border-indigo-500">
+                <div id="end-emoji" class="text-6xl mb-2 animate-bounce">🏆</div>
+                <h2 id="end-title" class="text-3xl font-black text-indigo-900 heading-font">EXCELLENT WORK!</h2>
+                <p id="end-subtitle" class="text-slate-600 text-sm font-medium mt-1 mb-4">You mastered Present Simple questions!</p>
+
+                <!-- Score Board -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs uppercase font-bold text-slate-400">Total Coins</div>
+                        <div class="text-2xl font-black text-amber-600 flex items-center justify-center gap-1">
+                            <span>🪙</span> <span id="final-coins">0</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase font-bold text-slate-400">Grammar Score</div>
+                        <div class="text-2xl font-black text-indigo-700" id="final-accuracy">100%</div>
+                    </div>
+                </div>
+
+                <button id="btn-next-action" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0">
+                    NEXT STAGE ⏩
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC -->
+    <script>
+        /* --- AUDIO SYNTHESIS SYSTEM (Web Audio API) --- */
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, type, duration, startVol = 0.2, endVol = 0) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(startVol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(Math.max(endVol, 0.0001), this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+            jump() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(520, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                } catch(e) {}
+            }
+            coin() {
+                if (!this.enabled || !this.ctx) return;
+                this.playTone(987.77, 'sine', 0.12, 0.2, 0.01);
+                setTimeout(() => this.playTone(1318.51, 'sine', 0.18, 0.2, 0.01), 70);
+            }
+            correct() {
+                if (!this.enabled || !this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playTone(freq, 'triangle', 0.15, 0.25, 0.01);
+                    }, idx * 70);
+                });
+            }
+            wrong() {
+                if (!this.enabled || !this.ctx) return;
+                this.playTone(220, 'sawtooth', 0.15, 0.2, 0.01);
+                setTimeout(() => this.playTone(174.61, 'sawtooth', 0.25, 0.25, 0.01), 100);
+            }
+            victory() {
+                if (!this.enabled || !this.ctx) return;
+                const fan = [440, 554, 659, 880];
+                fan.forEach((freq, i) => {
+                    setTimeout(() => this.playTone(freq, 'square', 0.25, 0.2, 0.01), i * 120);
+                });
+            }
+        }
+        const sfx = new SoundEffects();
+
+        /* --- WORKSHEET CURRICULUM QUESTIONS --- */
+        // Stage 1: Questions directly from Section 1 of worksheet
+        const stage1Questions = [
+            {
+                q: "1. Do you like chocolate?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, I do. 🍫", correct: true },
+                    { text: "No, I doesn't.", correct: false, tip: "With 'I', we use 'don't', not 'doesn't'." },
+                    { text: "Yes, I does.", correct: false, tip: "Use 'do' with pronouns I, you, we, they." }
+                ]
+            },
+            {
+                q: "2. Does Ali go to school by bus?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, he does. 🚌", correct: true },
+                    { text: "No, he don't.", correct: false, tip: "Ali is 'he', so we must use 'doesn't'." },
+                    { text: "Yes, he do.", correct: false, tip: "For he/she/it, always use 'does'!" }
+                ]
+            },
+            {
+                q: "3. Do birds fly in the sky?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, they do. 🕊️", correct: true },
+                    { text: "No, they doesn't.", correct: false, tip: "'Birds' is plural (they), use 'don't' or 'do'." },
+                    { text: "Yes, they does.", correct: false, tip: "Use 'do' with plural nouns." }
+                ]
+            },
+            {
+                q: "4. Does your mother cook dinner every day?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, she does. 🍳", correct: true },
+                    { text: "No, she don't.", correct: false, tip: "'Mother' is 'she', use 'doesn't'." },
+                    { text: "Yes, she do.", correct: false, tip: "With 'she', we use 'does'." }
+                ]
+            },
+            {
+                q: "5. Do fish live in water?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, they do. 🐟", correct: true },
+                    { text: "No, they doesn't.", correct: false, tip: "'Fish' (plural) takes 'do/don't'." },
+                    { text: "Yes, they does.", correct: false, tip: "With 'they', we always use 'do'." }
+                ]
+            },
+            {
+                q: "6. Does your teacher teach English?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, she does. 📚", correct: true },
+                    { text: "No, she don't.", correct: false, tip: "Singular teacher = 'he' or 'she' -> use 'does/doesn't'." },
+                    { text: "Yes, she do.", correct: false, tip: "Use 'does' for singular 3rd person." }
+                ]
+            },
+            {
+                q: "7. Do elephants eat meat?",
+                instruction: "Elephants eat grass and plants! Choose the correct answer:",
+                options: [
+                    { text: "No, they don't. 🐘", correct: true },
+                    { text: "Yes, they does.", correct: false, tip: "Elephants are herbivores, and 'they' takes 'do/don't'." },
+                    { text: "No, they doesn't.", correct: false, tip: "For 'they', use 'don't'." }
+                ]
+            },
+            {
+                q: "8. Does the sun rise in the morning?",
+                instruction: "Choose the correct short answer:",
+                options: [
+                    { text: "Yes, it does. ☀️", correct: true },
+                    { text: "No, it don't.", correct: false, tip: "'The sun' is 'it' -> use 'does'." },
+                    { text: "Yes, it do.", correct: false, tip: "With 'it', use 'does'." }
+                ]
+            }
+        ];
+
+        // Stage 2: Section 2 from worksheet: "Make a question"
+        const stage2Questions = [
+            {
+                answerText: "Answer: 'Yes, she plays tennis every Friday.'",
+                instruction: "Make the correct question for this answer:",
+                options: [
+                    { text: "Does she play tennis every Friday? 🎾", correct: true },
+                    { text: "Does she plays tennis every Friday?", correct: false, tip: "After 'Does', the main verb is in base form ('play', not 'plays')!" },
+                    { text: "Do she play tennis every Friday?", correct: false, tip: "Use 'Does' with 'she', not 'Do'." }
+                ]
+            },
+            {
+                answerText: "Answer: 'Yes, Ali goes to school by bus.'",
+                instruction: "Make the correct question for this answer:",
+                options: [
+                    { text: "Does Ali go to school by bus? 🚌", correct: true },
+                    { text: "Do Ali go to school by bus?", correct: false, tip: "Ali is singular (he) -> use 'Does'!" },
+                    { text: "Does Ali goes to school by bus?", correct: false, tip: "The base form 'go' is used after 'Does'." }
+                ]
+            },
+            {
+                answerText: "Answer: 'No, they don't watch TV after school.'",
+                instruction: "Make the correct question for this answer:",
+                options: [
+                    { text: "Do they watch TV after school? 📺", correct: true },
+                    { text: "Does they watch TV after school?", correct: false, tip: "With 'they', we start the question with 'Do'." },
+                    { text: "Do they watches TV after school?", correct: false, tip: "Always use the base verb 'watch'." }
+                ]
+            },
+            {
+                answerText: "Answer: 'Yes, my mother cooks dinner every day.'",
+                instruction: "Make the correct question for this answer:",
+                options: [
+                    { text: "Does your mother cook dinner every day? 🍲", correct: true },
+                    { text: "Do your mother cooks dinner every day?", correct: false, tip: "'Your mother' is 'she' -> use 'Does'." },
+                    { text: "Does your mother cooks dinner every day?", correct: false, tip: "Remove 's' from verb after 'Does' -> 'cook'." }
+                ]
+            }
+        ];
+
+        /* --- GAME ENGINE SETUP --- */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State variables
+        let currentStage = 1;
+        let score = 0;
+        let coins = 0;
+        let lives = 3;
+        let questionIndex = 0;
+        let activeQuestions = stage1Questions;
+        let isQuizOpen = false;
+        let gameActive = false;
+        let totalAnsweredCount = 0;
+        let correctAnswersCount = 0;
+
+        // Canvas sizing
+        const VIEW_WIDTH = 960;
+        const VIEW_HEIGHT = 540;
+        canvas.width = VIEW_WIDTH;
+        canvas.height = VIEW_HEIGHT;
+
+        // Player object
+        const player = {
+            x: 70,
+            y: 350,
+            width: 36,
+            height: 48,
+            vx: 0,
+            vy: 0,
+            speed: 4.8,
+            jumpPower: -10.5,
+            isGrounded: false,
+            facing: 'right',
+            animFrame: 0,
+            animTimer: 0,
+            reset(x = 70, y = 350) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.isGrounded = false;
+            }
+        };
+
+        // Key controls state
+        const keys = {
+            left: false,
+            right: false,
+            up: false
+        };
+
+        // Level world objects
+        let platforms = [];
+        let checkpoints = [];
+        let collectibles = [];
+        let particles = [];
+        let cameraX = 0;
+        let worldWidth = 3600;
+
+        /* --- LEVEL GENERATOR --- */
+        function buildLevel(stageNum) {
+            platforms = [];
+            checkpoints = [];
+            collectibles = [];
+            particles = [];
+            questionIndex = 0;
+
+            if (stageNum === 1) {
+                activeQuestions = stage1Questions;
+                worldWidth = 4400;
+                document.getElementById('stage-badge').innerText = "STAGE 1: SHORT ANSWERS (DO / DOES)";
+            } else {
+                activeQuestions = stage2Questions;
+                worldWidth = 3000;
+                document.getElementById('stage-badge').innerText = "STAGE 2: MAKE A QUESTION!";
+            }
+
+            // Floor base
+            platforms.push({ x: 0, y: VIEW_HEIGHT - 48, w: worldWidth, h: 48, type: 'ground' });
+
+            const numQ = activeQuestions.length;
+            const segmentDist = (worldWidth - 500) / numQ;
+
+            for (let i = 0; i < numQ; i++) {
+                const segX = 280 + i * segmentDist;
+
+                // Elevated playground platforms
+                platforms.push({ x: segX - 120, y: VIEW_HEIGHT - 130, w: 90, h: 20, type: 'platform' });
+                platforms.push({ x: segX - 20, y: VIEW_HEIGHT - 210, w: 100, h: 20, type: 'platform' });
+                platforms.push({ x: segX + 110, y: VIEW_HEIGHT - 140, w: 80, h: 20, type: 'platform' });
+
+                // Checkpoint Post
+                checkpoints.push({
+                    x: segX,
+                    y: VIEW_HEIGHT - 48 - 72,
+                    w: 48,
+                    h: 72,
+                    questionIdx: i,
+                    visited: false,
+                    color: '#6366f1'
+                });
+
+                // Coins between platforms
+                collectibles.push({ x: segX - 120 + 35, y: VIEW_HEIGHT - 165, size: 12, collected: false });
+                collectibles.push({ x: segX + 30, y: VIEW_HEIGHT - 245, size: 12, collected: false });
+                collectibles.push({ x: segX + 140, y: VIEW_HEIGHT - 175, size: 12, collected: false });
+                collectibles.push({ x: segX + 220, y: VIEW_HEIGHT - 75, size: 12, collected: false });
+            }
+
+            player.reset(60, VIEW_HEIGHT - 120);
+            updateHUD();
+        }
+
+        /* --- PARTICLE SYSTEM --- */
+        function addSparkles(x, y, color = '#f59e0b', count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.7) * 6,
+                    size: Math.random() * 5 + 3,
+                    color: color,
+                    alpha: 1,
+                    life: 1
+                });
+            }
+        }
+
+        /* --- INPUT HANDLERS --- */
+        window.addEventListener('keydown', (e) => {
+            sfx.init();
+            if (isQuizOpen) return;
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+                if (!keys.up && player.isGrounded) {
+                    player.vy = player.jumpPower;
+                    player.isGrounded = false;
+                    sfx.jump();
+                    addSparkles(player.x + player.width/2, player.y + player.height, '#cbd5e1', 5);
+                }
+                keys.up = true;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
+        });
+
+        // Touch Control Listeners
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        const btnJump = document.getElementById('btn-jump');
+
+        const bindTouch = (elem, pressAction, releaseAction) => {
+            elem.addEventListener('touchstart', (e) => { e.preventDefault(); sfx.init(); pressAction(); });
+            elem.addEventListener('touchend', (e) => { e.preventDefault(); releaseAction(); });
+            elem.addEventListener('mousedown', (e) => { e.preventDefault(); sfx.init(); pressAction(); });
+            elem.addEventListener('mouseup', (e) => { e.preventDefault(); releaseAction(); });
+        };
+
+        bindTouch(btnLeft, () => { keys.left = true; }, () => { keys.left = false; });
+        bindTouch(btnRight, () => { keys.right = true; }, () => { keys.right = false; });
+        bindTouch(btnJump, () => {
+            if (player.isGrounded && !isQuizOpen) {
+                player.vy = player.jumpPower;
+                player.isGrounded = false;
+                sfx.jump();
+                addSparkles(player.x + player.width/2, player.y + player.height, '#cbd5e1', 5);
+            }
+            keys.up = true;
+        }, () => { keys.up = false; });
+
+        // HUD & Audio Toggle
+        const soundBtn = document.getElementById('btn-sound');
+        soundBtn.addEventListener('click', () => {
+            sfx.init();
+            sfx.enabled = !sfx.enabled;
+            soundBtn.innerText = sfx.enabled ? '🔊' : '🔇';
+        });
+
+        /* --- QUIZ POPUP SYSTEM --- */
+        const quizModal = document.getElementById('quiz-modal');
+        const quizBox = document.getElementById('quiz-box');
+        const quizQuestionElem = document.getElementById('quiz-question');
+        const quizInstructionElem = document.getElementById('quiz-instruction');
+        const quizOptionsElem = document.getElementById('quiz-options');
+        const quizFeedbackElem = document.getElementById('quiz-feedback');
+        const quizNumElem = document.getElementById('quiz-num');
+        const quizCategoryElem = document.getElementById('quiz-category');
+
+        let currentActiveCheckpoint = null;
+
+        function openQuiz(checkpoint) {
+            isQuizOpen = true;
+            currentActiveCheckpoint = checkpoint;
+            const qData = activeQuestions[checkpoint.questionIdx];
+
+            quizNumElem.innerText = `Checkpoint ${checkpoint.questionIdx + 1} / ${activeQuestions.length}`;
+            quizCategoryElem.innerText = currentStage === 1 ? "Section 1: Short Answers" : "Section 2: Make A Question";
+            quizInstructionElem.innerText = qData.instruction || "Select the right grammar answer:";
+            quizQuestionElem.innerText = currentStage === 1 ? qData.q : qData.answerText;
+
+            quizFeedbackElem.innerHTML = '';
+            quizOptionsElem.innerHTML = '';
+
+            // Shuffle display options slightly so they aren't predictably positioned
+            const optionsShuffled = [...qData.options].sort(() => Math.random() - 0.5);
+
+            optionsShuffled.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3.5 px-5 bg-white hover:bg-amber-100 text-slate-800 font-bold rounded-2xl border-2 border-amber-500 shadow-md text-left transition transform hover:-translate-y-0.5 active:scale-98 text-sm md:text-base flex items-center justify-between";
+                btn.innerHTML = `<span>${opt.text}</span> <span class="text-xs opacity-60">👉 Click</span>`;
+                
+                btn.addEventListener('click', () => handleOptionChosen(btn, opt, checkpoint));
+                quizOptionsElem.appendChild(btn);
+            });
+
+            quizModal.classList.remove('hidden');
+        }
+
+        function handleOptionChosen(button, option, checkpoint) {
+            totalAnsweredCount++;
+            const allButtons = quizOptionsElem.querySelectorAll('button');
+            allButtons.forEach(b => b.disabled = true);
+
+            if (option.correct) {
+                correctAnswersCount++;
+                coins += 20;
+                sfx.correct();
+                button.classList.remove('bg-white', 'hover:bg-amber-100', 'border-amber-500');
+                button.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                quizFeedbackElem.innerHTML = `<span class="text-emerald-300 font-extrabold text-lg">🎉 Spot on! Great grammar! (+20 Coins)</span>`;
+
+                addSparkles(player.x + 20, player.y, '#10b981', 25);
+
+                setTimeout(() => {
+                    quizModal.classList.add('hidden');
+                    isQuizOpen = false;
+                    checkpoint.visited = true;
+                    updateHUD();
+
+                    // Check if stage complete
+                    const visitedAll = checkpoints.every(cp => cp.visited);
+                    if (visitedAll) {
+                        finishStage();
+                    }
+                }, 1300);
+
+            } else {
+                lives--;
+                sfx.wrong();
+                button.classList.remove('bg-white', 'border-amber-500');
+                button.classList.add('bg-rose-500', 'text-white', 'border-rose-700');
+                quizBox.classList.add('shake');
+                setTimeout(() => quizBox.classList.remove('shake'), 400);
+
+                quizFeedbackElem.innerHTML = `<div class="text-rose-300 font-bold text-sm bg-rose-950/60 p-2 rounded-xl border border-rose-500/40">💡 Reminder: ${option.tip || "Be careful with Do/Does!"}</div>`;
+
+                updateHUD();
+
+                if (lives <= 0) {
+                    setTimeout(() => {
+                        quizModal.classList.add('hidden');
+                        showGameOver(false);
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        allButtons.forEach(b => b.disabled = false);
+                    }, 1200);
+                }
+            }
+        }
+
+        function updateHUD() {
+            // Hearts
+            document.getElementById('heart-1').style.opacity = lives >= 1 ? '1' : '0.2';
+            document.getElementById('heart-2').style.opacity = lives >= 2 ? '1' : '0.2';
+            document.getElementById('heart-3').style.opacity = lives >= 3 ? '1' : '0.2';
+
+            // Coins
+            document.getElementById('coin-count').innerText = coins;
+
+            // Progress bar
+            const answeredCount = checkpoints.filter(c => c.visited).length;
+            const percent = (answeredCount / activeQuestions.length) * 100;
+            document.getElementById('progress-bar-fill').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `Checkpoints: ${answeredCount} / ${activeQuestions.length}`;
+        }
+
+        /* --- STAGE END & GAME OVER --- */
+        const gameOverModal = document.getElementById('gameover-modal');
+        const endEmoji = document.getElementById('end-emoji');
+        const endTitle = document.getElementById('end-title');
+        const endSubtitle = document.getElementById('end-subtitle');
+        const finalCoinsElem = document.getElementById('final-coins');
+        const finalAccuracyElem = document.getElementById('final-accuracy');
+        const nextActionBtn = document.getElementById('btn-next-action');
+
+        function finishStage() {
+            sfx.victory();
+            gameActive = false;
+            finalCoinsElem.innerText = coins;
+            const accuracy = Math.round((correctAnswersCount / Math.max(1, totalAnsweredCount)) * 100);
+            finalAccuracyElem.innerText = `${accuracy}%`;
+
+            if (currentStage === 1) {
+                endEmoji.innerText = "🌟";
+                endTitle.innerText = "STAGE 1 CLEARED!";
+                endSubtitle.innerText = "You solved all short answers! Ready for Stage 2: 'Make a Question'?";
+                nextActionBtn.innerText = "START STAGE 2 🚀";
+                nextActionBtn.onclick = () => {
+                    gameOverModal.classList.add('hidden');
+                    currentStage = 2;
+                    lives = Math.min(lives + 1, 3);
+                    buildLevel(2);
+                    gameActive = true;
+                };
+            } else {
+                endEmoji.innerText = "🎓🏆";
+                endTitle.innerText = "FORM 3 CHAMPION!";
+                endSubtitle.innerText = "Outstanding! You mastered Present Simple Yes/No Questions & Answers!";
+                nextActionBtn.innerText = "PLAY AGAIN 🔄";
+                nextActionBtn.onclick = () => {
+                    gameOverModal.classList.add('hidden');
+                    restartGame();
+                };
+            }
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function showGameOver(won) {
+            gameActive = false;
+            endEmoji.innerText = "📚";
+            endTitle.innerText = "KEEP PRACTICING!";
+            endSubtitle.innerText = "Don't worry! Review DO (I/you/we/they) and DOES (he/she/it) and try again!";
+            finalCoinsElem.innerText = coins;
+            const accuracy = Math.round((correctAnswersCount / Math.max(1, totalAnsweredCount)) * 100);
+            finalAccuracyElem.innerText = `${accuracy}%`;
+            nextActionBtn.innerText = "TRY AGAIN 🔄";
+            nextActionBtn.onclick = () => {
+                gameOverModal.classList.add('hidden');
+                restartGame();
+            };
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            currentStage = 1;
+            lives = 3;
+            coins = 0;
+            totalAnsweredCount = 0;
+            correctAnswersCount = 0;
+            buildLevel(1);
+            gameActive = true;
+        }
+
+        /* --- START GAME BUTTON --- */
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            sfx.init();
+            document.getElementById('start-modal').classList.add('hidden');
+            restartGame();
+        });
+
+        /* --- GAME PHYSICS & RENDER LOOP --- */
+        const GRAVITY = 0.45;
+        const FRICTION = 0.82;
+
+        function updateGame() {
+            if (!gameActive || isQuizOpen) return;
+
+            // Player Horizontal Movement
+            if (keys.left) {
+                player.vx = -player.speed;
+                player.facing = 'left';
+            } else if (keys.right) {
+                player.vx = player.speed;
+                player.facing = 'right';
+            } else {
+                player.vx *= FRICTION;
+            }
+
+            // Apply Gravity
+            player.vy += GRAVITY;
+
+            // Tentative new positions
+            player.x += player.vx;
+
+            // Level bounds
+            if (player.x < 0) { player.x = 0; player.vx = 0; }
+            if (player.x + player.width > worldWidth) { player.x = worldWidth - player.width; player.vx = 0; }
+
+            // Vertical Movement & Platform Collision
+            player.y += player.vy;
+            player.isGrounded = false;
+
+            // Check platforms
+            for (let plat of platforms) {
+                if (
+                    player.x + player.width > plat.x &&
+                    player.x < plat.x + plat.w &&
+                    player.y + player.height >= plat.y &&
+                    player.y + player.height <= plat.y + 16 &&
+                    player.vy >= 0
+                ) {
+                    player.y = plat.y - player.height;
+                    player.vy = 0;
+                    player.isGrounded = true;
+                }
+            }
+
+            // Animation timer
+            if (Math.abs(player.vx) > 0.4) {
+                player.animTimer += 0.2;
+                if (player.animTimer > 1) {
+                    player.animFrame = (player.animFrame + 1) % 4;
+                    player.animTimer = 0;
+                }
+            } else {
+                player.animFrame = 0;
+            }
+
+            // Coin Collectibles
+            for (let coin of collectibles) {
+                if (!coin.collected) {
+                    const dx = (player.x + player.width/2) - coin.x;
+                    const dy = (player.y + player.height/2) - coin.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < player.width/2 + coin.size) {
+                        coin.collected = true;
+                        coins += 5;
+                        sfx.coin();
+                        addSparkles(coin.x, coin.y, '#f59e0b', 8);
+                        updateHUD();
+                    }
+                }
+            }
+
+            // Checkpoints Detection
+            for (let cp of checkpoints) {
+                if (!cp.visited) {
+                    if (
+                        player.x + player.width > cp.x &&
+                        player.x < cp.x + cp.w &&
+                        player.y + player.height > cp.y &&
+                        player.y < cp.y + cp.h
+                    ) {
+                        openQuiz(cp);
+                        break;
+                    }
+                }
+            }
+
+            // Camera follow
+            const targetCamX = player.x - VIEW_WIDTH / 2.5;
+            cameraX += (targetCamX - cameraX) * 0.1;
+            cameraX = Math.max(0, Math.min(worldWidth - VIEW_WIDTH, cameraX));
+
+            // Particles update
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.alpha -= 0.025;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+        }
+
+        /* --- DRAWING FUNCTIONS --- */
+        function drawParallaxBackground() {
+            // Sky Gradient
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+            if (currentStage === 1) {
+                skyGrad.addColorStop(0, '#7dd3fc');
+                skyGrad.addColorStop(1, '#bae6fd');
+            } else {
+                // Sunset rooftop school aesthetic for Stage 2
+                skyGrad.addColorStop(0, '#f97316');
+                skyGrad.addColorStop(0.6, '#fbbf24');
+                skyGrad.addColorStop(1, '#fed7aa');
+            }
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+            // Distant Mountains / School Silhouettes
+            ctx.save();
+            ctx.fillStyle = currentStage === 1 ? '#a7f3d0' : '#fbcfe8';
+            ctx.beginPath();
+            ctx.moveTo(0, VIEW_HEIGHT);
+            for (let i = 0; i <= VIEW_WIDTH; i += 80) {
+                const hillY = VIEW_HEIGHT - 120 + Math.sin((i + cameraX * 0.2) * 0.005) * 40;
+                ctx.lineTo(i, hillY);
+            }
+            ctx.lineTo(VIEW_WIDTH, VIEW_HEIGHT);
+            ctx.fill();
+            ctx.restore();
+
+            // Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            for (let c = 0; c < 8; c++) {
+                const cloudX = ((c * 400 - cameraX * 0.3) % (worldWidth + 500) + worldWidth + 500) % (worldWidth + 500) - cameraX;
+                const cloudY = 50 + (c % 3) * 35;
+                if (cloudX > -150 && cloudX < VIEW_WIDTH + 150) {
+                    ctx.beginPath();
+                    ctx.arc(cloudX, cloudY, 26, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 24, cloudY - 8, 32, 0, Math.PI * 2);
+                    ctx.arc(cloudX + 50, cloudY, 24, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // School Building Accents in background
+            ctx.save();
+            ctx.translate(-cameraX * 0.5, 0);
+            for (let b = 0; b < worldWidth; b += 800) {
+                // Friendly campus towers & windows
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(b + 120, VIEW_HEIGHT - 260, 220, 220);
+                ctx.fillStyle = '#6366f1';
+                ctx.fillRect(b + 110, VIEW_HEIGHT - 275, 240, 18);
+                // Windows
+                ctx.fillStyle = '#93c5fd';
+                for (let wx = 0; wx < 3; wx++) {
+                    for (let wy = 0; wy < 2; wy++) {
+                        ctx.fillRect(b + 140 + wx * 65, VIEW_HEIGHT - 235 + wy * 65, 38, 42);
+                    }
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawWorld() {
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            // Draw Platforms
+            for (let plat of platforms) {
+                if (plat.type === 'ground') {
+                    // Grass top
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(plat.x, plat.y, plat.w, 14);
+                    // Dirt body
+                    ctx.fillStyle = '#854d0e';
+                    ctx.fillRect(plat.x, plat.y + 14, plat.w, plat.h - 14);
+                } else {
+                    // School desk / ruler style floating platform
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.roundRect(plat.x, plat.y, plat.w, plat.h, 8);
+                    ctx.fill();
+                    // Border
+                    ctx.strokeStyle = '#b45309';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    // Ruler markings
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1.5;
+                    for (let rx = 10; rx < plat.w - 10; rx += 12) {
+                        ctx.beginPath();
+                        ctx.moveTo(plat.x + rx, plat.y);
+                        ctx.lineTo(plat.x + rx, plat.y + 7);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw Checkpoints (Grammar Totems / School Desks)
+            for (let cp of checkpoints) {
+                const wave = Math.sin(Date.now() * 0.005 + cp.x) * 4;
+
+                // Base Desk/Flag pole
+                ctx.fillStyle = cp.visited ? '#10b981' : '#6366f1';
+                ctx.fillRect(cp.x + cp.w/2 - 4, cp.y + 20, 8, cp.h - 20);
+
+                // Checkpoint Banner / Book
+                ctx.fillStyle = cp.visited ? '#10b981' : '#4f46e5';
+                ctx.beginPath();
+                ctx.roundRect(cp.x, cp.y + wave, cp.w, 36, 8);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Icon / Text inside banner
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 15px Fredoka';
+                ctx.textAlign = 'center';
+                ctx.fillText(cp.visited ? "✓ DONE" : `Q${cp.questionIdx + 1}`, cp.x + cp.w/2, cp.y + wave + 23);
+
+                // Golden beacon glow if not visited
+                if (!cp.visited) {
+                    ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(cp.x + cp.w/2, cp.y + wave + 18, 28, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Draw Collectible Coins
+            for (let coin of collectibles) {
+                if (!coin.collected) {
+                    const bob = Math.sin(Date.now() * 0.006 + coin.x) * 5;
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(coin.x, coin.y + bob, coin.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+
+                    // Inside star symbol
+                    ctx.fillStyle = '#78350f';
+                    ctx.font = 'bold 10px Fredoka';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText("★", coin.x, coin.y + bob);
+                }
+            }
+
+            // Draw Player Character (Cute Smart Student with backpack!)
+            drawCutePlayer();
+
+            // Draw Particles
+            for (let p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            ctx.restore();
+        }
+
+        function drawCutePlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+
+            if (player.facing === 'left') {
+                ctx.scale(-1, 1);
+            }
+
+            const walkBob = player.isGrounded && Math.abs(player.vx) > 0.4 ? Math.sin(player.animTimer * Math.PI * 2) * 3 : 0;
+
+            // Character Body (School Jacket)
+            ctx.fillStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.roundRect(-14, -10 + walkBob, 28, 26, 7);
+            ctx.fill();
+
+            // Backpack on student
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.roundRect(-20, -6 + walkBob, 8, 18, 4);
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#fed7aa'; // Skin
+            ctx.beginPath();
+            ctx.arc(0, -20 + walkBob, 14, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hair / Cap
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.arc(0, -23 + walkBob, 14, Math.PI, 0);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(5, -20 + walkBob, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(4, -16 + walkBob, 4, 0.1 * Math.PI, 0.9 * Math.PI);
+            ctx.stroke();
+
+            // Legs with simple walk cycle
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 4;
+            const legOffset = Math.sin(player.animTimer * Math.PI * 2) * 6;
+            // Left leg
+            ctx.beginPath();
+            ctx.moveTo(-6, 16 + walkBob);
+            ctx.lineTo(-6 + legOffset, 24);
+            ctx.stroke();
+            // Right leg
+            ctx.beginPath();
+            ctx.moveTo(6, 16 + walkBob);
+            ctx.lineTo(6 - legOffset, 24);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        /* --- MAIN ANIMATION LOOP --- */
+        function gameLoop() {
+            updateGame();
+            ctx.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+            drawParallaxBackground();
+            drawWorld();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize and Start Loop
+        buildLevel(1);
+        requestAnimationFrame(gameLoop);
+
+    </script>
+</body>
+</html>
